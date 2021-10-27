@@ -1,0 +1,9 @@
+rootProject.name = 'jorm'
+
+def projects = [
+        'jorm',
+]
+
+projects.forEach {
+    include it
+}
