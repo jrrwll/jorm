@@ -1,0 +1,52 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    ext {
+        // https://mvnrepository.com/artifact/org.jooq/jooq
+        jooqVersion = '3.17.7'
+        jooqPath = new File("${projectDir}/build/generated/sources/jooq/main")
+        jooqPackageName = "${GROUP_ID}.${name}.jooq"
+    }
+    dependencies {
+        classpath "org.jooq:jooq:$jooqVersion"
+        classpath "org.jooq:jooq-meta:$jooqVersion"
+        classpath "org.jooq:jooq-codegen:$jooqVersion"
+        classpath "org.xerial:sqlite-jdbc:3.40.0.0"
+    }
+}
+
+// sourceSets.main.java.srcDirs += jooqPath.toString()
+sourceSets.test.java.srcDirs += jooqPath.toString()
+
+def configuration = """
+<configuration xmlns='http://www.jooq.org/xsd/jooq-codegen-3.7.0.xsd'>
+  <jdbc>
+    <driver>org.sqlite.JDBC</driver>
+    <url>jdbc:sqlite:${projectDir}/src/test/resources/testdb.sqlite</url>
+    <user></user>
+    <password></password>
+  </jdbc>
+  <generator>
+    <database />
+    <generate />
+    <target>
+      <packageName>${jooqPackageName}</packageName>
+      <directory>${jooqPath}</directory>
+    </target>
+  </generator>
+</configuration>
+"""
+
+task generateJooq {
+    doLast {
+        if (!jooqPath.exists()) {
+            jooqPath.mkdirs()
+        }
+        org.jooq.codegen.GenerationTool.generate(configuration)
+    }
+}
+
+test {
+    dependsOn generateJooq
+}
